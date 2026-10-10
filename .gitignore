@@ -1,0 +1,31 @@
+# .NET build output
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Node / Vite
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/*.local
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Logs
+*.log

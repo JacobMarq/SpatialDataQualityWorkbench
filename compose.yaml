@@ -1,0 +1,72 @@
+﻿services:
+  frontend:
+    build:
+      context: ./frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    init: true
+
+  api:
+    build:
+      context: .
+      dockerfile: src/SpatialDataQuality.Api/Dockerfile
+    working_dir: /src
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    volumes:
+      - ./:/src
+      - dotnet_nuget:/root/.nuget/packages
+      - api_bin:/src/src/SpatialDataQuality.Api/bin
+      - api_obj:/src/src/SpatialDataQuality.Api/obj
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+
+  postgres:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_DB: spatial_workbench
+      POSTGRES_USER: spatial_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your local .env file}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" && psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT PostGIS_Version();" | grep -q .
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  etl:
+    build:
+      context: ./python
+    working_dir: /app
+    volumes:
+      - ./python:/app
+    command:
+      - python
+      - -c
+      - |
+        import time
+        print("Python development environment ready", flush=True)
+        while True:
+            time.sleep(3600)
+    init: true
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
+  dotnet_nuget:
+  api_bin:
+  api_obj:
